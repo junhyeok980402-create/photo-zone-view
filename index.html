@@ -3,27 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#120F18">
+<meta name="theme-color" content="#17121F">
 <title>GoodDevice photo zone</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%23EC4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ccircle cx='16' cy='17' r='6' fill='none' stroke='white' stroke-width='2.5'/%3E%3Cpath d='M9 10h14' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FF8FB8'/%3E%3Cstop offset='1' stop-color='%23A88BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Ccircle cx='16' cy='17' r='6' fill='none' stroke='%233B1B2C' stroke-width='2.5'/%3E%3Cpath d='M9 10h14' stroke='%233B1B2C' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
+  /* 20대 여성 치위생사·손님이 쓰는 화면이다. 자두빛 어두운 바탕 위에
+     핑크→라벤더 그라데이션과 민트 포인트로 부드럽고 화사하게 잡았다.
+     바탕이 어두운 건 화면 한가운데가 늘 사진이기 때문이다. */
+  :root {
+    --bg: #17121F;
+    --surface: #241D31;
+    --surface-high: #302644;
+    --pink: #FF8FB8;
+    --lavender: #A88BFF;
+    --mint: #6FE3C4;
+    --text: #F7F2FA;
+    --ink: #3B1B2C;          /* 파스텔 위에 얹는 글자색 */
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
 
   html, body { height: 100%; }
 
   body {
     margin: 0;
-    background: #120F18;
-    color: #F2EEF8;
+    background: var(--bg);
+    color: var(--text);
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont,
                  "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
     line-height: 1.6;
+    letter-spacing: -0.01em;
     text-align: center;
     display: flex;
     flex-direction: column;
     background-image:
-      radial-gradient(70% 45% at 12% 0%, rgba(124, 58, 237, .38), transparent 70%),
-      radial-gradient(60% 40% at 92% 8%, rgba(236, 72, 153, .28), transparent 70%);
+      radial-gradient(72% 44% at 10% 0%, rgba(255, 143, 184, .34), transparent 72%),
+      radial-gradient(64% 40% at 96% 6%, rgba(111, 227, 196, .16), transparent 70%),
+      radial-gradient(80% 50% at 88% 100%, rgba(168, 139, 255, .26), transparent 72%);
     background-repeat: no-repeat;
     background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
@@ -33,19 +49,19 @@
   .brand {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     padding: 16px 20px 10px;
-    font-size: 16px; font-weight: 800; letter-spacing: -.015em;
+    font-size: 16px; font-weight: 800;
     flex: none;
   }
 
   .brand .mark {
-    width: 30px; height: 30px; border-radius: 10px;
-    background: linear-gradient(135deg, #7C3AED, #EC4899);
+    width: 31px; height: 31px; border-radius: 11px;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
     display: grid; place-items: center;
-    box-shadow: 0 6px 18px -6px rgba(236, 72, 153, .8);
+    box-shadow: 0 7px 20px -7px rgba(255, 143, 184, .85);
     flex: none;
   }
 
-  .brand .mark svg { width: 17px; height: 17px; fill: #fff; }
+  .brand .mark svg { width: 17px; height: 17px; fill: var(--ink); }
 
   #app {
     flex: 1; min-height: 0;
@@ -62,8 +78,8 @@
 
   #view {
     display: block;
-    border-radius: 16px;
-    box-shadow: 0 18px 44px -18px rgba(0, 0, 0, .9);
+    border-radius: 20px;
+    box-shadow: 0 22px 50px -20px rgba(0, 0, 0, .95);
     touch-action: none;
   }
 
@@ -72,7 +88,7 @@
 
   .hint {
     margin: 0; font-size: 12px;
-    color: rgba(242, 238, 248, .45);
+    color: rgba(247, 242, 250, .5);
     min-height: 18px;
   }
 
@@ -85,51 +101,52 @@
   .chips::-webkit-scrollbar { display: none; }
 
   .chip {
-    flex: none; padding: 9px 15px;
-    border-radius: 20px; border: 1px solid rgba(255,255,255,.12);
+    flex: none; padding: 9px 16px;
+    border-radius: 22px; border: 1px solid rgba(255,255,255,.13);
     background: rgba(255,255,255,.05);
-    color: rgba(242,238,248,.72);
+    color: rgba(247, 242, 250, .76);
     font-size: 13.5px; font-weight: 700;
-    font-family: inherit;
+    font-family: inherit; letter-spacing: -.01em;
   }
 
   .chip[aria-pressed="true"] {
-    background: linear-gradient(135deg, #7C3AED, #EC4899);
-    border-color: transparent; color: #fff;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    border-color: transparent; color: var(--ink); font-weight: 900;
   }
 
   .row { display: flex; gap: 10px; }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    flex: 1; padding: 15px 18px;
-    border: 0; border-radius: 15px;
-    background: linear-gradient(135deg, #7C3AED, #EC4899);
-    color: #fff; text-decoration: none;
-    font-size: 16px; font-weight: 800; letter-spacing: -.01em;
+    flex: 1; padding: 16px 18px;
+    border: 0; border-radius: 20px;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    color: var(--ink); text-decoration: none;
+    font-size: 16.5px; font-weight: 900; letter-spacing: -.02em;
     font-family: inherit;
-    box-shadow: 0 12px 28px -10px rgba(236, 72, 153, .75);
+    box-shadow: 0 14px 30px -12px rgba(255, 143, 184, .8);
   }
 
   .btn.ghost {
     flex: none; background: rgba(255,255,255,.07);
-    border: 1px solid rgba(255,255,255,.14);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,.15);
     box-shadow: none;
   }
 
-  .btn:active { transform: translateY(1px); filter: brightness(.95); }
+  .btn:active { transform: translateY(1px); filter: brightness(.96); }
   .btn[disabled] { opacity: .5; }
 
   .btn svg {
     width: 19px; height: 19px; flex: none;
-    fill: none; stroke: currentColor; stroke-width: 2;
+    fill: none; stroke: currentColor; stroke-width: 2.2;
     stroke-linecap: round; stroke-linejoin: round;
   }
 
   /* --- 스티커 고르는 창 --- */
   #sheet {
     position: fixed; inset: 0; z-index: 10;
-    background: rgba(0,0,0,.55);
+    background: rgba(10, 7, 16, .6);
     display: none;
     align-items: flex-end;
   }
@@ -137,57 +154,60 @@
   #sheet[data-open="1"] { display: flex; }
 
   .sheet-body {
-    width: 100%; max-height: 72%;
+    width: 100%; max-height: 74%;
     overflow-y: auto;
-    background: #1B1626;
-    border-radius: 24px 24px 0 0;
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
     padding: 14px 18px calc(24px + env(safe-area-inset-bottom));
     text-align: left;
   }
 
   .grip {
-    width: 42px; height: 4px; margin: 0 auto 14px;
-    border-radius: 2px; background: rgba(255,255,255,.18);
+    width: 44px; height: 4px; margin: 0 auto 14px;
+    border-radius: 2px; background: rgba(255,255,255,.2);
   }
 
-  .sheet-body h2 { margin: 0 0 2px; font-size: 18px; font-weight: 800; }
+  .sheet-body h2 { margin: 0 0 2px; font-size: 18.5px; font-weight: 900; }
   .sheet-body .fine { margin: 0 0 16px; }
 
   .group {
-    margin: 0 0 9px; font-size: 11px; font-weight: 700;
-    letter-spacing: .06em; color: rgba(242,238,248,.38);
+    margin: 0 0 9px; font-size: 11px; font-weight: 800;
+    letter-spacing: .07em; color: rgba(247, 242, 250, .4);
   }
+
+  .group.event { color: var(--mint); }
 
   .items {
     display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 18px;
   }
 
   .item {
-    width: 62px; height: 62px; padding: 4px;
+    width: 64px; height: 64px; padding: 5px;
     display: grid; place-items: center;
-    border-radius: 13px; border: 1px solid rgba(255,255,255,.1);
-    background: rgba(255,255,255,.05);
-    font-size: 30px; line-height: 1;
-    color: #F2EEF8; font-family: inherit;
+    border-radius: 17px; border: 1px solid rgba(255,255,255,.1);
+    background: var(--surface-high);
+    font-size: 31px; line-height: 1;
+    color: var(--text); font-family: inherit;
   }
 
-  .item.text { font-size: 12px; font-weight: 800; text-align: center; }
+  .item.text { font-size: 12px; font-weight: 900; text-align: center; }
+  .item img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
   /* --- 안내 --- */
-  .lede { margin: 0; font-size: 15.5px; color: rgba(242, 238, 248, .72); }
-  .fine { margin: 0; font-size: 12.5px; color: rgba(242, 238, 248, .45); }
-  .fine b { color: rgba(242, 238, 248, .75); font-weight: 700; }
+  .lede { margin: 0; font-size: 15.5px; color: rgba(247, 242, 250, .76); }
+  .fine { margin: 0; font-size: 12.5px; color: rgba(247, 242, 250, .48); }
+  .fine b { color: rgba(247, 242, 250, .78); font-weight: 700; }
 
   .notice {
-    margin: 0; padding: 9px 14px;
-    border-radius: 11px;
+    margin: 0; padding: 10px 14px;
+    border-radius: 14px;
     background: rgba(255, 255, 255, .05);
     border: 1px solid rgba(255, 255, 255, .09);
     font-size: 11.5px; line-height: 1.6;
-    color: rgba(242, 238, 248, .45);
+    color: rgba(247, 242, 250, .48);
   }
 
-  .notice b { color: rgba(242, 238, 248, .75); font-weight: 700; }
+  .notice b { color: rgba(247, 242, 250, .76); font-weight: 700; }
 
   .center {
     flex: 1; display: flex; flex-direction: column;
@@ -195,10 +215,10 @@
   }
 
   #toast {
-    position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%);
-    z-index: 20; padding: 11px 20px; border-radius: 12px;
-    background: rgba(20,16,28,.95); border: 1px solid rgba(255,255,255,.12);
-    font-size: 13.5px; font-weight: 700;
+    position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+    z-index: 20; padding: 12px 20px; border-radius: 16px;
+    background: rgba(36, 29, 49, .97); border: 1px solid rgba(255,255,255,.13);
+    font-size: 13.5px; font-weight: 700; max-width: 86%;
     opacity: 0; pointer-events: none; transition: opacity .2s;
   }
 
@@ -227,9 +247,12 @@
 var STORAGE = "https://tbfzjglkhttlyhhjebwu.supabase.co/storage/v1/object/public";
 var BUCKET = "photo";
 
+// 부스에서 올린 로고 스티커 목록. 태블릿 관리자 화면에서 스티커를 추가하면
+// 앱이 이 파일을 다시 쓴다. 없으면 내장 스티커만 보여준다.
+var STICKER_MANIFEST = "stickers/manifest.json";
+
 // ---------------------------------------------------------------------------
 // 필터 — 앱(lib/models/photo_filter.dart)과 **같은 4x5 색 행렬**을 쓴다.
-// 값이 갈라지면 태블릿 미리보기와 손님이 받는 사진의 색이 달라진다.
 var FILTERS = [
   { id: "none",   label: "원본",     m: null },
   { id: "bright", label: "화사하게", m: [ 1.19685,-0.17880,-0.01805,0, 10,  -0.05315, 1.07120,-0.01805,0, 10,  -0.05315,-0.17880, 1.23195,0, 10] },
@@ -242,7 +265,7 @@ var FILTERS = [
   { id: "sepia",  label: "세피아",   m: [ 0.393,   0.769,  0.189,  0,  0,   0.349,    0.686,  0.168,  0,  0,   0.272,   0.534,   0.131,  0,  0] }
 ];
 
-// 스티커 — 앱(lib/models/sticker.dart)의 치과·치위생 묶음과 같다.
+// 내장 스티커 — 치과·치위생 행사용.
 var STICKERS = [
   { label: "치아·구강", items: ["🦷","🪥","🫧","😁","😄","😬","😷"] },
   { label: "진료·위생", items: ["🩺","🏥","🧑‍⚕️","🩹","💊","🧼"] },
@@ -250,8 +273,13 @@ var STICKERS = [
   { label: "문구", items: ["충치 ZERO","치아 건강","스케일링 완료","오늘도 칫솔질","환한 미소"], text: true }
 ];
 
-// 문구는 글자 수가 많아 이모지와 같은 크기로 그리면 사진을 벗어난다 (앱과 같은 값).
-function baseFraction(s) { return s.text ? 0.30 : 0.16; }
+// 스티커 기본 크기 (사진 가로 대비). 문구는 글자가 길어 작게 잡고,
+// 로고는 알아볼 수 있어야 해서 이모지보다 조금 크게 잡는다.
+function baseFraction(s) {
+  if (s.text) return 0.30;
+  if (s.img) return 0.24;
+  return 0.16;
+}
 
 // ---------------------------------------------------------------------------
 var app = document.getElementById("app");
@@ -278,6 +306,12 @@ function noticeHtml() {
          '사진 외에 이름·연락처 등 개인정보는 수집하지 않습니다.</p>';
 }
 
+function photoUrl(suffix) {
+  // 뒤에 붙은 t는 캐시를 피하려는 것이다. 부스에서 사진이 다시 올라가는 경우
+  // CDN이 옛 사진을 몇 분간 그대로 내려준다.
+  return STORAGE + "/" + BUCKET + "/" + suffix + "?t=" + Date.now();
+}
+
 function loadPhoto() {
   app.innerHTML = '<div class="center"><p class="lede">사진을 불러오는 중…</p></div>';
 
@@ -291,10 +325,30 @@ function loadPhoto() {
     showMessage("사진을 찾을 수 없습니다.",
       "촬영 후 24시간이 지나 자동으로 삭제되었을 수 있어요.<br>부스 스태프에게 문의해 주세요.");
   };
+  image.src = photoUrl(id + ".jpg");
+}
 
-  // 뒤에 붙은 t는 캐시를 피하려는 것이다. 부스에서 사진이 다시 올라가는 경우
-  // CDN이 옛 사진을 몇 분간 그대로 내려준다.
-  image.src = STORAGE + "/" + BUCKET + "/" + id + ".jpg?t=" + Date.now();
+/// 부스가 올린 로고 스티커를 받아온다. 없거나 실패하면 조용히 넘어간다 —
+/// 로고가 없다고 꾸미기를 못 하게 만들 이유가 없다.
+function loadEventStickers(done) {
+  fetch(photoUrl(STICKER_MANIFEST), { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      var items = (data && data.items) || [];
+      if (!items.length) { done(null); return; }
+
+      var loaded = [], left = items.length;
+      items.forEach(function (objectPath) {
+        var im = new Image();
+        im.crossOrigin = "anonymous";
+        im.onload = function () { loaded.push({ img: im }); finish(); };
+        im.onerror = finish;
+        im.src = photoUrl(objectPath);
+      });
+
+      function finish() { if (--left === 0) done(loaded.length ? loaded : null); }
+    })
+    .catch(function () { done(null); });
 }
 
 // ===========================================================================
@@ -313,9 +367,10 @@ function startEditor(image) {
   filtered.width = natW; filtered.height = natH;
 
   var filterId = "none";
-  var placed = [];      // {emoji|text, x, y, scale, rotation}
+  var placed = [];      // {emoji|text|img, x, y, scale, rotation}
   var selected = -1;
   var nextId = 1;
+  var groups = STICKERS;
 
   app.innerHTML =
     '<div id="stage"><canvas id="view"></canvas></div>' +
@@ -338,11 +393,19 @@ function startEditor(image) {
   var hint = document.getElementById("hint");
 
   buildChips();
-  buildSheet();
+  bindSheet();
+  renderSheetItems();
   applyFilter();
   layout();
   window.addEventListener("resize", layout);
   window.addEventListener("orientationchange", layout);
+
+  // 로고는 늦게 와도 되므로 편집기를 먼저 띄우고, 도착하면 목록만 다시 그린다.
+  loadEventStickers(function (logos) {
+    if (!logos) return;
+    groups = [{ label: "행사 스티커", items: logos, event: true }].concat(STICKERS);
+    renderSheetItems();
+  });
 
   // -------------------------------------------------------------------------
   // 그리기 — 화면과 저장이 **같은 함수**를 쓴다. 규칙이 두 벌이면 손님이 맞춰둔
@@ -364,10 +427,15 @@ function startEditor(image) {
   }
 
   function drawSticker(c, s, size) {
+    if (s.img) {
+      var b = bounds(c, s, size);
+      c.drawImage(s.img, -b.w / 2, -b.h / 2, b.w, b.h);
+      return;
+    }
     c.textAlign = "center";
     c.textBaseline = "middle";
     if (s.text) {
-      // 굵게 쓰고 흰 테두리를 둘러 어떤 배경에서도 읽히게 한다 (앱과 같은 규칙).
+      // 굵게 쓰고 흰 테두리를 둘러 어떤 배경에서도 읽히게 한다.
       var fs = size * 0.26;
       c.font = "900 " + fs + "px " + fontStack();
       c.lineJoin = "round";
@@ -395,22 +463,22 @@ function startEditor(image) {
     var r = W * 0.028;
 
     c.lineWidth = W * 0.004;
-    c.strokeStyle = "rgba(255,255,255,.9)";
+    c.strokeStyle = "rgba(255,255,255,.92)";
     c.setLineDash([W * 0.016, W * 0.012]);
     c.strokeRect(-hw, -hh, hw * 2, hh * 2);
     c.setLineDash([]);
 
     // 왼쪽 위: 지우기
-    dot(c, -hw, -hh, r, "#EC4899");
-    c.strokeStyle = "#fff"; c.lineWidth = r * 0.24;
+    dot(c, -hw, -hh, r, "#FF8FB8");
+    c.strokeStyle = "#3B1B2C"; c.lineWidth = r * 0.26;
     c.beginPath();
     c.moveTo(-hw - r * .38, -hh - r * .38); c.lineTo(-hw + r * .38, -hh + r * .38);
     c.moveTo(-hw + r * .38, -hh - r * .38); c.lineTo(-hw - r * .38, -hh + r * .38);
     c.stroke();
 
     // 오른쪽 아래: 크기·각도 손잡이
-    dot(c, hw, hh, r, "#7C3AED");
-    c.strokeStyle = "#fff"; c.lineWidth = r * 0.24;
+    dot(c, hw, hh, r, "#A88BFF");
+    c.strokeStyle = "#3B1B2C"; c.lineWidth = r * 0.26;
     c.beginPath();
     c.moveTo(hw - r * .38, hh + r * .38); c.lineTo(hw + r * .38, hh - r * .38);
     c.moveTo(hw + r * .38, hh - r * .38); c.lineTo(hw + r * .1, hh - r * .38);
@@ -426,6 +494,10 @@ function startEditor(image) {
 
   // 스티커가 차지하는 상자. 손가락이 닿았는지 판단하는 데도 쓴다.
   function bounds(c, s, size) {
+    if (s.img) {
+      var ratio = s.img.naturalHeight / s.img.naturalWidth;
+      return { w: size, h: size * ratio };
+    }
     if (!s.text) return { w: size, h: size };
     var fs = size * 0.26;
     c.font = "900 " + fs + "px " + fontStack();
@@ -493,31 +565,17 @@ function startEditor(image) {
   }
 
   // -------------------------------------------------------------------------
-  // 스티커 고르는 창
-  function buildSheet() {
+  // 스티커 고르는 창. 목록은 로고가 도착하면 다시 그려질 수 있으므로,
+  // 이벤트 연결(bindSheet)과 내용 그리기(renderSheetItems)를 나눠 둔다.
+  function bindSheet() {
     var sheet = document.getElementById("sheet");
-    var body = document.getElementById("sheetBody");
 
-    var html = '<div class="grip"></div><h2>스티커 붙이기</h2>' +
-      '<p class="fine">누르면 사진 가운데에 붙어요. 끌어서 옮기고, ' +
-      '오른쪽 아래 손잡이를 끌면 크기와 각도가 바뀝니다.</p>';
-
-    STICKERS.forEach(function (g, gi) {
-      html += '<p class="group">' + g.label + '</p><div class="items">';
-      g.items.forEach(function (v, ii) {
-        html += '<button type="button" class="item' + (g.text ? " text" : "") +
-                '" data-g="' + gi + '" data-i="' + ii + '">' + v + '</button>';
-      });
-      html += '</div>';
-    });
-    body.innerHTML = html;
-
-    body.addEventListener("click", function (e) {
+    document.getElementById("sheetBody").addEventListener("click", function (e) {
       var el = e.target.closest(".item");
       if (!el) return;
-      var g = STICKERS[+el.getAttribute("data-g")];
+      var g = groups[+el.getAttribute("data-g")];
       var v = g.items[+el.getAttribute("data-i")];
-      addSticker(g.text ? { text: v } : { emoji: v });
+      addSticker(g.event ? { img: v.img } : (g.text ? { text: v } : { emoji: v }));
       closeSheet();
     });
 
@@ -526,6 +584,23 @@ function startEditor(image) {
     document.getElementById("stickerBtn").addEventListener("click", function () {
       sheet.setAttribute("data-open", "1");
     });
+  }
+
+  function renderSheetItems() {
+    var html = '<div class="grip"></div><h2>스티커 붙이기</h2>' +
+      '<p class="fine">누르면 사진 가운데에 붙어요. 끌어서 옮기고, ' +
+      '오른쪽 아래 손잡이를 끌면 크기와 각도가 바뀝니다.</p>';
+
+    groups.forEach(function (g, gi) {
+      html += '<p class="group' + (g.event ? " event" : "") + '">' + g.label + '</p><div class="items">';
+      g.items.forEach(function (v, ii) {
+        var inner = g.event ? '<img src="' + v.img.src + '" alt="">' : v;
+        html += '<button type="button" class="item' + (g.text ? " text" : "") +
+                '" data-g="' + gi + '" data-i="' + ii + '">' + inner + '</button>';
+      });
+      html += '</div>';
+    });
+    document.getElementById("sheetBody").innerHTML = html;
   }
 
   function closeSheet() { document.getElementById("sheet").removeAttribute("data-open"); }
