@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120F18">
+<title>GoodDevice photo zone</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%23EC4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ccircle cx='16' cy='17' r='6' fill='none' stroke='white' stroke-width='2.5'/%3E%3Cpath d='M9 10h14' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    padding: 28px 20px calc(28px + env(safe-area-inset-bottom));
+    background: #120F18;
+    color: #F2EEF8;
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont,
+                 "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    line-height: 1.6;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background-image:
+      radial-gradient(70% 45% at 12% 0%, rgba(124, 58, 237, .38), transparent 70%),
+      radial-gradient(60% 40% at 92% 8%, rgba(236, 72, 153, .28), transparent 70%);
+    background-repeat: no-repeat;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 17px; font-weight: 800; letter-spacing: -.015em;
+  }
+
+  .brand .mark {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: linear-gradient(135deg, #7C3AED, #EC4899);
+    display: grid; place-items: center;
+    box-shadow: 0 6px 18px -6px rgba(236, 72, 153, .8);
+    flex: none;
+  }
+
+  .brand .mark svg { width: 19px; height: 19px; fill: #fff; }
+
+  .lede { margin: 0; font-size: 15.5px; color: rgba(242, 238, 248, .72); }
+
+  .shot { margin: 4px 0 0; width: 100%; max-width: 460px; }
+
+  .shot img {
+    display: block; width: 100%; height: auto;
+    border-radius: 18px;
+    box-shadow: 0 18px 44px -18px rgba(0, 0, 0, .9);
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    width: 100%; max-width: 460px; padding: 17px 26px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #7C3AED, #EC4899);
+    color: #fff; text-decoration: none;
+    font-size: 17px; font-weight: 800; letter-spacing: -.01em;
+    box-shadow: 0 12px 28px -10px rgba(236, 72, 153, .75);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:active { transform: translateY(1px); filter: brightness(.95); }
+
+  .btn svg {
+    width: 20px; height: 20px; flex: none;
+    fill: none; stroke: #fff; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .fine { margin: 0; font-size: 13px; color: rgba(242, 238, 248, .45); }
+  .fine b { color: rgba(242, 238, 248, .75); font-weight: 700; }
+
+  .notice {
+    margin: 4px 0 0; padding: 12px 16px; max-width: 460px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .09);
+    font-size: 12.5px; line-height: 1.7;
+    color: rgba(242, 238, 248, .5);
+  }
+
+  .notice b { color: rgba(242, 238, 248, .8); font-weight: 700; }
+
+  footer {
+    margin-top: auto; padding-top: 20px;
+    font-size: 11.5px; letter-spacing: .06em;
+    color: rgba(242, 238, 248, .3);
+  }
+
+  @media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <span class="mark">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3 7.6 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.6L15 3H9Zm3 5.5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+  </span>
+  GoodDevice photo zone
+</div>
+
+<main id="app"></main>
+
+<p class="notice">
+  촬영한 사진은 <b>24시간 뒤 자동으로 삭제</b>됩니다.<br>
+  사진 외에 이름·연락처 등 개인정보는 수집하지 않습니다.
+</p>
+
+<footer>GOODDEVICE PHOTO ZONE</footer>
+
+<script>
+  // 사진이 있는 곳. 공개 버킷이라 키가 필요 없다 — 이 페이지에는 비밀이 없다.
+  var STORAGE = "https://tbfzjglkhttlyhhjebwu.supabase.co/storage/v1/object/public";
+  var BUCKET = "photo";
+
+  // 주소에 넣은 사진 id만 받는다. 영숫자만 남겨 다른 경로를 가리키지 못하게 한다.
+  var params = new URLSearchParams(location.search);
+  var id = (params.get("id") || "").replace(/[^a-zA-Z0-9]/g, "");
+
+  var app = document.getElementById("app");
+
+  if (!id) {
+    app.innerHTML =
+      '<p class="lede">사진 주소가 올바르지 않습니다.</p>' +
+      '<p class="fine">부스 화면의 QR을 다시 스캔해 주세요.</p>';
+  } else {
+    var img = STORAGE + "/" + BUCKET + "/" + id + ".jpg";
+    app.innerHTML =
+      '<figure class="shot"><img id="photo" src="' + img + '" alt="촬영한 사진"></figure>' +
+      '<a class="btn" href="' + img + '" download="GoodDevice-photo-' + id + '.jpg">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+      '사진 저장하기</a>' +
+      '<p class="fine">저장이 안 되면 사진을 <b>길게 눌러</b> 저장하세요.</p>';
+
+    // 24시간이 지나 사진이 지워졌을 때도 손님이 이유를 알 수 있게 한다.
+    document.getElementById("photo").addEventListener("error", function () {
+      app.innerHTML =
+        '<p class="lede">사진을 찾을 수 없습니다.</p>' +
+        '<p class="fine">촬영 후 24시간이 지나 자동으로 삭제되었을 수 있어요.<br>' +
+        '부스 스태프에게 문의해 주세요.</p>';
+    });
+  }
+</script>
+
+</body>
+</html>
