@@ -306,10 +306,16 @@ function noticeHtml() {
          '사진 외에 이름·연락처 등 개인정보는 수집하지 않습니다.</p>';
 }
 
-function photoUrl(suffix) {
-  // 뒤에 붙은 t는 캐시를 피하려는 것이다. 부스에서 사진이 다시 올라가는 경우
-  // CDN이 옛 사진을 몇 분간 그대로 내려준다.
+/// 내용이 바뀔 수 있는 것(사진, 스티커 목록). 뒤에 붙은 t는 캐시를 피하려는
+/// 것이다 — 부스에서 다시 올라간 경우 CDN이 옛것을 몇 분간 그대로 내려준다.
+function freshUrl(suffix) {
   return STORAGE + "/" + BUCKET + "/" + suffix + "?t=" + Date.now();
+}
+
+/// 내용이 절대 안 바뀌는 것(스티커 그림 — 부스가 매번 새 이름으로 올린다).
+/// 캐시를 피하면 손님마다 로고를 다시 받게 되므로 주소를 그대로 쓴다.
+function assetUrl(suffix) {
+  return STORAGE + "/" + BUCKET + "/" + suffix;
 }
 
 function loadPhoto() {
@@ -325,30 +331,44 @@ function loadPhoto() {
     showMessage("사진을 찾을 수 없습니다.",
       "촬영 후 24시간이 지나 자동으로 삭제되었을 수 있어요.<br>부스 스태프에게 문의해 주세요.");
   };
-  image.src = photoUrl(id + ".jpg");
+  image.src = freshUrl(id + ".jpg");
 }
 
 /// 부스가 올린 로고 스티커를 받아온다. 없거나 실패하면 조용히 넘어간다 —
 /// 로고가 없다고 꾸미기를 못 하게 만들 이유가 없다.
 function loadEventStickers(done) {
-  fetch(photoUrl(STICKER_MANIFEST), { cache: "no-store" })
+  // 한 장이라도 응답이 안 오면 영영 기다리게 되므로 시간을 끊는다.
+  // 그때까지 받은 것만 쓴다.
+  var settled = false;
+  var timer = setTimeout(function () { finalize(); }, 8000);
+
+  var loaded = [], left = 0;
+
+  fetch(freshUrl(STICKER_MANIFEST), { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       var items = (data && data.items) || [];
-      if (!items.length) { done(null); return; }
+      if (!items.length) { finalize(); return; }
 
-      var loaded = [], left = items.length;
+      left = items.length;
       items.forEach(function (objectPath) {
         var im = new Image();
         im.crossOrigin = "anonymous";
-        im.onload = function () { loaded.push({ img: im }); finish(); };
-        im.onerror = finish;
-        im.src = photoUrl(objectPath);
+        im.onload = function () { loaded.push({ img: im }); step(); };
+        im.onerror = step;
+        im.src = assetUrl(objectPath);
       });
-
-      function finish() { if (--left === 0) done(loaded.length ? loaded : null); }
     })
-    .catch(function () { done(null); });
+    .catch(function () { finalize(); });
+
+  function step() { if (--left <= 0) finalize(); }
+
+  function finalize() {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    done(loaded.length ? loaded : null);
+  }
 }
 
 // ===========================================================================
