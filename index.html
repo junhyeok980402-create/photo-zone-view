@@ -403,7 +403,7 @@ function startEditor(image) {
           '스티커</button>' +
         '<button class="btn" id="saveBtn" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-          '사진 저장하기</button>' +
+          '<span id="saveLabel">사진 저장하기</span></button>' +
       '</div>' +
       noticeHtml() +
     '</div>';
@@ -740,17 +740,29 @@ function startEditor(image) {
   // 저장 — 화면이 아니라 **원본 크기**로 다시 그려 내보낸다.
   document.getElementById("saveBtn").addEventListener("click", function () {
     var btn = this;
+    var label = document.getElementById("saveLabel");
+    if (btn.disabled) return;
+
+    // 원본 크기로 JPEG를 만드는 데 폰에서는 몇 초가 걸린다. 아무 표시가 없으면
+    // 손님이 고장난 줄 알고 계속 누른다.
     btn.disabled = true;
+    label.textContent = "만드는 중…";
 
-    var out = document.createElement("canvas");
-    out.width = natW; out.height = natH;
-    paint(out.getContext("2d"), natW, natH, false);
+    // 글자가 먼저 바뀌어 보이도록 한 프레임 쉬었다가 무거운 일을 시작한다.
+    requestAnimationFrame(function () {
+      setTimeout(function () {
+        var out = document.createElement("canvas");
+        out.width = natW; out.height = natH;
+        paint(out.getContext("2d"), natW, natH, false);
 
-    out.toBlob(function (blob) {
-      btn.disabled = false;
-      if (!blob) { toast("저장하지 못했어요. 사진을 길게 눌러 저장해 주세요."); return; }
-      saveBlob(blob);
-    }, "image/jpeg", 0.92);
+        out.toBlob(function (blob) {
+          btn.disabled = false;
+          label.textContent = "사진 저장하기";
+          if (!blob) { toast("저장하지 못했어요. 사진을 길게 눌러 저장해 주세요."); return; }
+          saveBlob(blob);
+        }, "image/jpeg", 0.92);
+      }, 0);
+    });
   });
 
   function saveBlob(blob) {
