@@ -130,7 +130,10 @@
       '<p class="lede">사진 주소가 올바르지 않습니다.</p>' +
       '<p class="fine">부스 화면의 QR을 다시 스캔해 주세요.</p>';
   } else {
-    var img = STORAGE + "/" + BUCKET + "/" + id + ".jpg";
+    // 뒤에 붙은 t는 캐시를 피하려는 것이다. 손님이 부스에서 스티커를 붙이면 같은
+    // 주소에 사진이 새로 올라가는데, CDN이 옛 사진을 몇 분간 그대로 내려준다.
+    // 페이지를 열 때마다 t가 달라지므로 항상 방금 만든 사진을 받는다.
+    var img = STORAGE + "/" + BUCKET + "/" + id + ".jpg?t=" + Date.now();
     app.innerHTML =
       '<figure class="shot"><img id="photo" src="' + img + '" alt="촬영한 사진"></figure>' +
       '<a class="btn" href="' + img + '" download="GoodDevice-photo-' + id + '.jpg">' +
