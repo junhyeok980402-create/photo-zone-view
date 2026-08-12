@@ -475,34 +475,74 @@ function startEditor(image) {
            '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
   }
 
-  // 고른 스티커에만 보이는 조작 표시. 저장할 때는 그리지 않는다.
-  function drawHandles(c, s, size, W) {
+  /// 조작 단추의 반지름. 그림 크기와 손가락 크기 둘 다 고려한다.
+  function handleRadius(W) { return W * 0.032; }
+
+  /// 손가락이 단추에 닿았다고 볼 범위.
+  ///
+  /// 그림 기준으로만 잡으면 실제 화면에서 지름이 20px대라 누르기 어렵다
+  /// (실제로 "하기 어렵다"는 이야기를 들었다). 화면 기준으로 최소 크기를 준다.
+  function handleHit(W) {
+    var box = view.getBoundingClientRect();
+    var cssToCanvas = box.width > 0 ? view.width / box.width : 1;
+    return Math.max(handleRadius(W) * 1.8, 27 * cssToCanvas);
+  }
+
+  /// 고른 스티커의 모서리 단추 위치. 이름 = 하는 일.
+  function handlePoints(c, s, size, W) {
     var b = bounds(c, s, size);
     var pad = W * 0.012;
     var hw = b.w / 2 + pad, hh = b.h / 2 + pad;
-    var r = W * 0.028;
+    return {
+      remove: { x: -hw, y: -hh },   // 왼쪽 위
+      done: { x: hw, y: -hh },      // 오른쪽 위
+      resize: { x: hw, y: hh },     // 오른쪽 아래
+      hw: hw, hh: hh
+    };
+  }
+
+  // 고른 스티커에만 보이는 조작 표시. 저장할 때는 그리지 않는다.
+  function drawHandles(c, s, size, W) {
+    var h = handlePoints(c, s, size, W);
+    var r = handleRadius(W);
 
     c.lineWidth = W * 0.004;
     c.strokeStyle = "rgba(255,255,255,.92)";
     c.setLineDash([W * 0.016, W * 0.012]);
-    c.strokeRect(-hw, -hh, hw * 2, hh * 2);
+    c.strokeRect(-h.hw, -h.hh, h.hw * 2, h.hh * 2);
     c.setLineDash([]);
 
     // 왼쪽 위: 지우기
-    dot(c, -hw, -hh, r, "#FF8FB8");
+    dot(c, h.remove.x, h.remove.y, r, "#FF8FB8");
     c.strokeStyle = "#3B1B2C"; c.lineWidth = r * 0.26;
     c.beginPath();
-    c.moveTo(-hw - r * .38, -hh - r * .38); c.lineTo(-hw + r * .38, -hh + r * .38);
-    c.moveTo(-hw + r * .38, -hh - r * .38); c.lineTo(-hw - r * .38, -hh + r * .38);
+    c.moveTo(h.remove.x - r * .36, h.remove.y - r * .36);
+    c.lineTo(h.remove.x + r * .36, h.remove.y + r * .36);
+    c.moveTo(h.remove.x + r * .36, h.remove.y - r * .36);
+    c.lineTo(h.remove.x - r * .36, h.remove.y + r * .36);
     c.stroke();
 
+    // 오른쪽 위: 배치 완료 (체크). 빈 곳을 눌러 해제하는 걸 몰라서 헤매기 쉽다.
+    dot(c, h.done.x, h.done.y, r, "#6FE3C4");
+    c.strokeStyle = "#1E4438"; c.lineWidth = r * 0.3;
+    c.lineCap = "round"; c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(h.done.x - r * .40, h.done.y + r * .02);
+    c.lineTo(h.done.x - r * .10, h.done.y + r * .32);
+    c.lineTo(h.done.x + r * .42, h.done.y - r * .30);
+    c.stroke();
+    c.lineCap = "butt";
+
     // 오른쪽 아래: 크기·각도 손잡이
-    dot(c, hw, hh, r, "#A88BFF");
+    dot(c, h.resize.x, h.resize.y, r, "#A88BFF");
     c.strokeStyle = "#3B1B2C"; c.lineWidth = r * 0.26;
     c.beginPath();
-    c.moveTo(hw - r * .38, hh + r * .38); c.lineTo(hw + r * .38, hh - r * .38);
-    c.moveTo(hw + r * .38, hh - r * .38); c.lineTo(hw + r * .1, hh - r * .38);
-    c.moveTo(hw + r * .38, hh - r * .38); c.lineTo(hw + r * .38, hh - r * .1);
+    c.moveTo(h.resize.x - r * .36, h.resize.y + r * .36);
+    c.lineTo(h.resize.x + r * .36, h.resize.y - r * .36);
+    c.moveTo(h.resize.x + r * .36, h.resize.y - r * .36);
+    c.lineTo(h.resize.x + r * .08, h.resize.y - r * .36);
+    c.moveTo(h.resize.x + r * .36, h.resize.y - r * .36);
+    c.lineTo(h.resize.x + r * .36, h.resize.y - r * .08);
     c.stroke();
   }
 
@@ -609,7 +649,7 @@ function startEditor(image) {
   function renderSheetItems() {
     var html = '<div class="grip"></div><h2>스티커 붙이기</h2>' +
       '<p class="fine">누르면 사진 가운데에 붙어요. 끌어서 옮기고, ' +
-      '오른쪽 아래 손잡이를 끌면 크기와 각도가 바뀝니다.</p>';
+      '오른쪽 아래 손잡이로 크기·각도를 맞춘 뒤 오른쪽 위 ✓ 를 누르면 됩니다.</p>';
 
     groups.forEach(function (g, gi) {
       html += '<p class="group' + (g.event ? " event" : "") + '">' + g.label + '</p><div class="items">';
@@ -630,7 +670,7 @@ function startEditor(image) {
     base.x = 0.5; base.y = 0.5; base.scale = 1; base.rotation = 0;
     placed.push(base);
     selected = base.id;
-    hint.textContent = "끌어서 옮기고, 오른쪽 아래 손잡이로 크기와 각도를 맞추세요";
+    hint.textContent = "끌어서 옮기고 ↘로 크기·각도, 다 되면 오른쪽 위 ✓ 를 누르세요";
     render();
   }
 
@@ -644,15 +684,15 @@ function startEditor(image) {
     var p = toCanvas(e);
     var W = view.width, H = view.height;
 
-    // 고른 스티커의 손잡이부터 본다 — 스티커 위에 겹쳐 있기 때문이다.
+    // 고른 스티커의 단추부터 본다 — 스티커 위에 겹쳐 있기 때문이다.
     var sel = find(selected);
     if (sel) {
       var size = W * baseFraction(sel) * sel.scale;
-      var b = bounds(ctx, sel, size);
-      var pad = W * 0.012, r = W * 0.028;
+      var h = handlePoints(ctx, sel, size, W);
+      var hit = handleHit(W);
       var local = toLocal(p, sel, W, H);
 
-      if (dist(local, { x: b.w / 2 + pad, y: b.h / 2 + pad }) <= r * 1.7) {
+      if (dist(local, h.resize) <= hit) {
         mode = "handle";
         startSticker = { scale: sel.scale, rotation: sel.rotation };
         var v = { x: p.x - sel.x * W, y: p.y - sel.y * H };
@@ -661,9 +701,16 @@ function startEditor(image) {
         view.setPointerCapture(e.pointerId);
         return;
       }
-      if (dist(local, { x: -(b.w / 2 + pad), y: -(b.h / 2 + pad) }) <= r * 1.7) {
+      if (dist(local, h.remove) <= hit) {
         placed = placed.filter(function (s) { return s.id !== selected; });
         selected = -1;
+        hint.textContent = "지웠어요. 스티커를 더 붙이거나 저장하세요";
+        render();
+        return;
+      }
+      if (dist(local, h.done) <= hit) {
+        selected = -1;
+        hint.textContent = "배치 완료! 스티커를 다시 누르면 또 고칠 수 있어요";
         render();
         return;
       }
