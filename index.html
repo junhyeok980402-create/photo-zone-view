@@ -748,21 +748,23 @@ function startEditor(image) {
     btn.disabled = true;
     label.textContent = "만드는 중…";
 
-    // 글자가 먼저 바뀌어 보이도록 한 프레임 쉬었다가 무거운 일을 시작한다.
-    requestAnimationFrame(function () {
-      setTimeout(function () {
-        var out = document.createElement("canvas");
-        out.width = natW; out.height = natH;
-        paint(out.getContext("2d"), natW, natH, false);
+    // 글자가 먼저 바뀌어 보이도록 잠깐 쉬었다가 무거운 일을 시작한다.
+    //
+    // **requestAnimationFrame을 쓰면 안 된다.** 화면이 꺼지거나 손님이 다른 앱으로
+    // 넘어가면 그 콜백이 아예 안 돌아서, 저장이 영영 시작되지 않고 버튼만
+    // "만드는 중…"으로 잠긴다. setTimeout은 화면이 없어도 돈다.
+    setTimeout(function () {
+      var out = document.createElement("canvas");
+      out.width = natW; out.height = natH;
+      paint(out.getContext("2d"), natW, natH, false);
 
-        out.toBlob(function (blob) {
-          btn.disabled = false;
-          label.textContent = "사진 저장하기";
-          if (!blob) { toast("저장하지 못했어요. 사진을 길게 눌러 저장해 주세요."); return; }
-          saveBlob(blob);
-        }, "image/jpeg", 0.92);
-      }, 0);
-    });
+      out.toBlob(function (blob) {
+        btn.disabled = false;
+        label.textContent = "사진 저장하기";
+        if (!blob) { toast("저장하지 못했어요. 사진을 길게 눌러 저장해 주세요."); return; }
+        saveBlob(blob);
+      }, "image/jpeg", 0.92);
+    }, 32);
   });
 
   function saveBlob(blob) {
