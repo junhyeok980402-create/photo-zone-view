@@ -243,6 +243,109 @@
 <script>
 "use strict";
 
+// ---------------------------------------------------------------------------
+// 언어 — 손님 **폰의 브라우저 언어**를 따라간다.
+//
+// 태블릿에서 고른 언어를 여기로 넘기지 않는다. 해외 행사에서는 한 부스에 여러
+// 국적이 섞이고, 그때 각자 자기 폰에서 자기 언어로 보는 것이 맞다. 주소에
+// 언어를 실어 보내면 QR을 남에게 넘겨줄 때 엉뚱한 언어로 열린다.
+//
+// 아는 언어가 아니면 영어로 간다 — 모르는 언어일 때 한국어보다 읽힐 가능성이
+// 높다.
+var PACKS = {
+  ko: {
+    loading: "사진을 불러오는 중…",
+    badLink: "사진 주소가 올바르지 않습니다.",
+    badLinkWhy: "부스 화면의 QR을 다시 스캔해 주세요.",
+    notFound: "사진을 찾을 수 없습니다.",
+    notFoundWhy: "촬영 후 24시간이 지나 자동으로 삭제되었을 수 있어요.<br>부스 스태프에게 문의해 주세요.",
+    privacy: "촬영한 사진은 <b>24시간 뒤 자동으로 삭제</b>됩니다. 사진 외에 이름·연락처 등 개인정보는 수집하지 않습니다.",
+    hintStart: "색감을 바꾸거나 스티커를 붙여보세요",
+    hintPlacing: "끌어서 옮기고 ↘로 크기·각도, 다 되면 오른쪽 위 ✓ 를 누르세요",
+    hintRemoved: "지웠어요. 스티커를 더 붙이거나 저장하세요",
+    hintDone: "배치 완료! 스티커를 다시 누르면 또 고칠 수 있어요",
+    stickerBtn: "스티커",
+    save: "사진 저장하기",
+    saving: "만드는 중…",
+    saveFailed: "저장하지 못했어요. 사진을 길게 눌러 저장해 주세요.",
+    saved: "저장했어요!",
+    savedCheck: "저장했어요! 안 보이면 사진첩·다운로드를 확인해 주세요.",
+    sheetTitle: "스티커 붙이기",
+    sheetHow: "누르면 사진 가운데에 붙어요. 끌어서 옮기고, 오른쪽 아래 손잡이로 크기·각도를 맞춘 뒤 오른쪽 위 ✓ 를 누르면 됩니다.",
+    eventGroup: "행사 스티커",
+    filters: {
+      none: "원본", bright: "화사하게", soft: "뽀샤시", vivid: "선명하게",
+      film: "필름", warm: "웜톤", cool: "쿨톤", mono: "흑백", sepia: "세피아"
+    },
+    groups: { teeth: "치아·구강", care: "진료·위생", praise: "칭찬·반짝", words: "문구" },
+    words: ["충치 ZERO", "치아 건강", "스케일링 완료", "오늘도 칫솔질", "환한 미소"]
+  },
+  en: {
+    loading: "Loading your photo…",
+    badLink: "This link is not valid.",
+    badLinkWhy: "Please scan the QR code on the booth screen again.",
+    notFound: "Photo not found.",
+    notFoundWhy: "It may have been deleted automatically 24 hours after it was taken.<br>Please ask the booth staff for help.",
+    privacy: "Your photo is <b>deleted automatically after 24 hours</b>. We collect no personal data such as your name or contact details.",
+    hintStart: "Try a color filter or add some stickers",
+    hintPlacing: "Drag to move, use ↘ to resize and rotate, then tap ✓ at the top right",
+    hintRemoved: "Removed. Add more stickers or save your photo",
+    hintDone: "Placed! Tap the sticker again to adjust it",
+    stickerBtn: "Stickers",
+    save: "Save photo",
+    saving: "Creating…",
+    saveFailed: "Could not save. Press and hold the photo to save it.",
+    saved: "Saved!",
+    savedCheck: "Saved! If you can't find it, check your photos or downloads.",
+    sheetTitle: "Add stickers",
+    sheetHow: "Tap one to place it in the middle of the photo. Drag to move it, use the handle at the bottom right to resize and rotate, then tap ✓ at the top right.",
+    eventGroup: "Event stickers",
+    filters: {
+      none: "Original", bright: "Bright", soft: "Soft", vivid: "Vivid",
+      film: "Film", warm: "Warm", cool: "Cool", mono: "B&W", sepia: "Sepia"
+    },
+    groups: { teeth: "Teeth", care: "Dental care", praise: "Praise", words: "Words" },
+    words: ["ZERO CAVITIES", "HEALTHY TEETH", "CLEANING DONE", "BRUSH DAILY", "BRIGHT SMILE"]
+  },
+  vi: {
+    loading: "Đang tải ảnh của bạn…",
+    badLink: "Đường dẫn không hợp lệ.",
+    badLinkWhy: "Vui lòng quét lại mã QR trên màn hình booth.",
+    notFound: "Không tìm thấy ảnh.",
+    notFoundWhy: "Ảnh có thể đã tự động xoá sau 24 giờ kể từ khi chụp.<br>Vui lòng hỏi nhân viên tại booth.",
+    privacy: "Ảnh của bạn sẽ <b>tự động xoá sau 24 giờ</b>. Chúng tôi không thu thập thông tin cá nhân như tên hay số điện thoại.",
+    hintStart: "Hãy thử đổi màu ảnh hoặc dán sticker",
+    hintPlacing: "Kéo để di chuyển, dùng ↘ để đổi kích thước và góc, xong nhấn ✓ ở góc trên phải",
+    hintRemoved: "Đã xoá. Dán thêm sticker hoặc lưu ảnh",
+    hintDone: "Đã đặt xong! Nhấn lại vào sticker để chỉnh tiếp",
+    stickerBtn: "Sticker",
+    save: "Lưu ảnh",
+    saving: "Đang tạo…",
+    saveFailed: "Không lưu được. Hãy nhấn giữ ảnh để lưu.",
+    saved: "Đã lưu!",
+    savedCheck: "Đã lưu! Nếu không thấy, hãy kiểm tra thư viện ảnh hoặc thư mục tải về.",
+    sheetTitle: "Dán sticker",
+    sheetHow: "Nhấn để dán vào giữa ảnh. Kéo để di chuyển, dùng tay cầm ở góc dưới phải để đổi kích thước và góc, rồi nhấn ✓ ở góc trên phải.",
+    eventGroup: "Sticker sự kiện",
+    filters: {
+      none: "Gốc", bright: "Tươi sáng", soft: "Mềm mại", vivid: "Rực rỡ",
+      film: "Film", warm: "Ấm", cool: "Lạnh", mono: "Trắng đen", sepia: "Sepia"
+    },
+    groups: { teeth: "Răng miệng", care: "Chăm sóc", praise: "Khen ngợi", words: "Chữ" },
+    words: ["KHÔNG SÂU RĂNG", "RĂNG KHỎE MẠNH", "ĐÃ LẤY CAO RĂNG", "ĐÁNH RĂNG MỖI NGÀY", "NỤ CƯỜI TƯƠI"]
+  }
+};
+
+var LANG = (function () {
+  var tag = (navigator.language || "ko").toLowerCase();
+  if (tag.indexOf("ko") === 0) return "ko";
+  if (tag.indexOf("vi") === 0) return "vi";
+  return "en";
+})();
+
+var T = PACKS[LANG];
+document.documentElement.lang = LANG;
+
 // 사진이 있는 곳. 공개 버킷이라 키가 필요 없다 — 이 페이지에는 비밀이 없다.
 var STORAGE = "https://tbfzjglkhttlyhhjebwu.supabase.co/storage/v1/object/public";
 var BUCKET = "photo";
@@ -253,24 +356,29 @@ var STICKER_MANIFEST = "stickers/manifest.json";
 
 // ---------------------------------------------------------------------------
 // 필터 — 앱(lib/models/photo_filter.dart)과 **같은 4x5 색 행렬**을 쓴다.
+// 이름은 T.filters[id]에서 가져온다 (행렬은 언어와 무관하다).
 var FILTERS = [
-  { id: "none",   label: "원본",     m: null },
-  { id: "bright", label: "화사하게", m: [ 1.19685,-0.17880,-0.01805,0, 10,  -0.05315, 1.07120,-0.01805,0, 10,  -0.05315,-0.17880, 1.23195,0, 10] },
-  { id: "soft",   label: "뽀샤시",   m: [ 0.95,    0,      0,      0, 24,   0,        0.95,   0,      0, 22,   0,       0,       0.95,   0, 19] },
-  { id: "vivid",  label: "선명하게", m: [ 1.33110,-0.16450,-0.01660,0,-19.2, -0.04890, 1.21550,-0.01660,0,-19.2, -0.04890,-0.16450, 1.36340,0,-19.2] },
-  { id: "film",   label: "필름",     m: [ 0.90,    0.05,   0.00,   0, 18,   0.02,     0.90,   0.02,   0, 14,   0.00,    0.03,    0.85,   0, 20] },
-  { id: "warm",   label: "웜톤",     m: [ 1.08,    0,      0,      0,  6,   0,        1.02,   0,      0,  0,   0,       0,       0.92,   0,  0] },
-  { id: "cool",   label: "쿨톤",     m: [ 0.95,    0,      0,      0,  0,   0,        1.00,   0,      0,  0,   0,       0,       1.10,   0,  6] },
-  { id: "mono",   label: "흑백",     m: [ 0.2126,  0.7152, 0.0722, 0,  0,   0.2126,   0.7152, 0.0722, 0,  0,   0.2126,  0.7152,  0.0722, 0,  0] },
-  { id: "sepia",  label: "세피아",   m: [ 0.393,   0.769,  0.189,  0,  0,   0.349,    0.686,  0.168,  0,  0,   0.272,   0.534,   0.131,  0,  0] }
+  { id: "none",   m: null },
+  { id: "bright", m: [ 1.19685,-0.17880,-0.01805,0, 10,  -0.05315, 1.07120,-0.01805,0, 10,  -0.05315,-0.17880, 1.23195,0, 10] },
+  { id: "soft",   m: [ 0.95,    0,      0,      0, 24,   0,        0.95,   0,      0, 22,   0,       0,       0.95,   0, 19] },
+  { id: "vivid",  m: [ 1.33110,-0.16450,-0.01660,0,-19.2, -0.04890, 1.21550,-0.01660,0,-19.2, -0.04890,-0.16450, 1.36340,0,-19.2] },
+  { id: "film",   m: [ 0.90,    0.05,   0.00,   0, 18,   0.02,     0.90,   0.02,   0, 14,   0.00,    0.03,    0.85,   0, 20] },
+  { id: "warm",   m: [ 1.08,    0,      0,      0,  6,   0,        1.02,   0,      0,  0,   0,       0,       0.92,   0,  0] },
+  { id: "cool",   m: [ 0.95,    0,      0,      0,  0,   0,        1.00,   0,      0,  0,   0,       0,       1.10,   0,  6] },
+  { id: "mono",   m: [ 0.2126,  0.7152, 0.0722, 0,  0,   0.2126,   0.7152, 0.0722, 0,  0,   0.2126,  0.7152,  0.0722, 0,  0] },
+  { id: "sepia",  m: [ 0.393,   0.769,  0.189,  0,  0,   0.349,    0.686,  0.168,  0,  0,   0.272,   0.534,   0.131,  0,  0] }
 ];
 
 // 내장 스티커 — 치과·치위생 행사용.
+//
+// 이모지는 어느 나라에서나 그대로 통하므로 번역하지 않는다. **문구 스티커만**
+// 번역한다 — 사진에 그대로 박히는 글자라서, 베트남 손님 사진에 한글이 찍히면
+// 그 사진은 못 쓴다.
 var STICKERS = [
-  { label: "치아·구강", items: ["🦷","🪥","🫧","😁","😄","😬","😷"] },
-  { label: "진료·위생", items: ["🩺","🏥","🧑‍⚕️","🩹","💊","🧼"] },
-  { label: "칭찬·반짝", items: ["✨","💎","⭐","💯","👍","🥇","🎉","💙"] },
-  { label: "문구", items: ["충치 ZERO","치아 건강","스케일링 완료","오늘도 칫솔질","환한 미소"], text: true }
+  { label: T.groups.teeth,  items: ["🦷","🪥","🫧","😁","😄","😬","😷"] },
+  { label: T.groups.care,   items: ["🩺","🏥","🧑‍⚕️","🩹","💊","🧼"] },
+  { label: T.groups.praise, items: ["✨","💎","⭐","💯","👍","🥇","🎉","💙"] },
+  { label: T.groups.words,  items: T.words, text: true }
 ];
 
 // 스티커 기본 크기 (사진 가로 대비). 문구는 글자가 길어 작게 잡고,
@@ -288,7 +396,7 @@ var params = new URLSearchParams(location.search);
 var id = (params.get("id") || "").replace(/[^a-zA-Z0-9]/g, "");
 
 if (!id) {
-  showMessage("사진 주소가 올바르지 않습니다.", "부스 화면의 QR을 다시 스캔해 주세요.");
+  showMessage(T.badLink, T.badLinkWhy);
 } else {
   loadPhoto();
 }
@@ -302,8 +410,7 @@ function showMessage(lede, fine) {
 }
 
 function noticeHtml() {
-  return '<p class="notice">촬영한 사진은 <b>24시간 뒤 자동으로 삭제</b>됩니다. ' +
-         '사진 외에 이름·연락처 등 개인정보는 수집하지 않습니다.</p>';
+  return '<p class="notice">' + T.privacy + '</p>';
 }
 
 /// 내용이 바뀔 수 있는 것(사진, 스티커 목록). 뒤에 붙은 t는 캐시를 피하려는
@@ -319,7 +426,7 @@ function assetUrl(suffix) {
 }
 
 function loadPhoto() {
-  app.innerHTML = '<div class="center"><p class="lede">사진을 불러오는 중…</p></div>';
+  app.innerHTML = '<div class="center"><p class="lede">' + T.loading + '</p></div>';
 
   var image = new Image();
   // canvas로 꾸민 사진을 다시 저장하려면 CORS 허용 상태로 받아와야 한다.
@@ -328,8 +435,7 @@ function loadPhoto() {
 
   image.onload = function () { startEditor(image); };
   image.onerror = function () {
-    showMessage("사진을 찾을 수 없습니다.",
-      "촬영 후 24시간이 지나 자동으로 삭제되었을 수 있어요.<br>부스 스태프에게 문의해 주세요.");
+    showMessage(T.notFound, T.notFoundWhy);
   };
   image.src = freshUrl(id + ".jpg");
 }
@@ -395,15 +501,15 @@ function startEditor(image) {
   app.innerHTML =
     '<div id="stage"><canvas id="view"></canvas></div>' +
     '<div class="tools">' +
-      '<p class="hint" id="hint">색감을 바꾸거나 스티커를 붙여보세요</p>' +
+      '<p class="hint" id="hint">' + T.hintStart + '</p>' +
       '<div class="chips" id="chips"></div>' +
       '<div class="row">' +
         '<button class="btn ghost" id="stickerBtn" type="button">' +
           '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>' +
-          '스티커</button>' +
+          T.stickerBtn + '</button>' +
         '<button class="btn" id="saveBtn" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-          '<span id="saveLabel">사진 저장하기</span></button>' +
+          '<span id="saveLabel">' + T.save + '</span></button>' +
       '</div>' +
       noticeHtml() +
     '</div>';
@@ -423,7 +529,7 @@ function startEditor(image) {
   // 로고는 늦게 와도 되므로 편집기를 먼저 띄우고, 도착하면 목록만 다시 그린다.
   loadEventStickers(function (logos) {
     if (!logos) return;
-    groups = [{ label: "행사 스티커", items: logos, event: true }].concat(STICKERS);
+    groups = [{ label: T.eventGroup, items: logos, event: true }].concat(STICKERS);
     renderSheetItems();
   });
 
@@ -611,7 +717,7 @@ function startEditor(image) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "chip";
-      b.textContent = f.label;
+      b.textContent = T.filters[f.id];
       b.setAttribute("aria-pressed", f.id === filterId ? "true" : "false");
       b.addEventListener("click", function () {
         filterId = f.id;
@@ -647,9 +753,8 @@ function startEditor(image) {
   }
 
   function renderSheetItems() {
-    var html = '<div class="grip"></div><h2>스티커 붙이기</h2>' +
-      '<p class="fine">누르면 사진 가운데에 붙어요. 끌어서 옮기고, ' +
-      '오른쪽 아래 손잡이로 크기·각도를 맞춘 뒤 오른쪽 위 ✓ 를 누르면 됩니다.</p>';
+    var html = '<div class="grip"></div><h2>' + T.sheetTitle + '</h2>' +
+      '<p class="fine">' + T.sheetHow + '</p>';
 
     groups.forEach(function (g, gi) {
       html += '<p class="group' + (g.event ? " event" : "") + '">' + g.label + '</p><div class="items">';
@@ -670,7 +775,7 @@ function startEditor(image) {
     base.x = 0.5; base.y = 0.5; base.scale = 1; base.rotation = 0;
     placed.push(base);
     selected = base.id;
-    hint.textContent = "끌어서 옮기고 ↘로 크기·각도, 다 되면 오른쪽 위 ✓ 를 누르세요";
+    hint.textContent = T.hintPlacing;
     render();
   }
 
@@ -704,13 +809,13 @@ function startEditor(image) {
       if (dist(local, h.remove) <= hit) {
         placed = placed.filter(function (s) { return s.id !== selected; });
         selected = -1;
-        hint.textContent = "지웠어요. 스티커를 더 붙이거나 저장하세요";
+        hint.textContent = T.hintRemoved;
         render();
         return;
       }
       if (dist(local, h.done) <= hit) {
         selected = -1;
-        hint.textContent = "배치 완료! 스티커를 다시 누르면 또 고칠 수 있어요";
+        hint.textContent = T.hintDone;
         render();
         return;
       }
@@ -793,7 +898,7 @@ function startEditor(image) {
     // 원본 크기로 JPEG를 만드는 데 폰에서는 몇 초가 걸린다. 아무 표시가 없으면
     // 손님이 고장난 줄 알고 계속 누른다.
     btn.disabled = true;
-    label.textContent = "만드는 중…";
+    label.textContent = T.saving;
 
     // 글자가 먼저 바뀌어 보이도록 잠깐 쉬었다가 무거운 일을 시작한다.
     //
@@ -807,8 +912,8 @@ function startEditor(image) {
 
       out.toBlob(function (blob) {
         btn.disabled = false;
-        label.textContent = "사진 저장하기";
-        if (!blob) { toast("저장하지 못했어요. 사진을 길게 눌러 저장해 주세요."); return; }
+        label.textContent = T.save;
+        if (!blob) { toast(T.saveFailed); return; }
         saveBlob(blob);
       }, "image/jpeg", 0.92);
     }, 32);
@@ -822,7 +927,7 @@ function startEditor(image) {
     // 폰에서는 공유 시트로 넘기는 쪽이 사진첩에 바로 저장돼 손님이 헤매지 않는다.
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file] })
-        .then(function () { toast("저장했어요!"); })
+        .then(function () { toast(T.saved); })
         .catch(function () { downloadBlob(blob, name); });
       return;
     }
@@ -837,7 +942,7 @@ function startEditor(image) {
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-    toast("저장했어요! 안 보이면 사진첩·다운로드를 확인해 주세요.");
+    toast(T.savedCheck);
   }
 }
 
