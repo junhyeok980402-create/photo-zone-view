@@ -355,6 +355,33 @@ var BUCKET = "photo";
 var STICKER_MANIFEST = "stickers/manifest.json";
 
 // ---------------------------------------------------------------------------
+// 사진과 스티커를 **어디서** 받아오는가.
+//
+// 기본은 위의 공개 버킷이다(인터넷 경로). 그런데 부스에 인터넷이 없으면 사진이
+// 클라우드에 올라가지 못하고, 그러면 이 페이지도 열 수 없어 손님이 꾸미기를 아예
+// 못 쓴다. 그래서 **태블릿의 로컬 서버가 이 페이지를 직접 띄울 수 있게** 했다.
+//
+// 그때는 로컬 서버가 페이지 앞에 window.PHOTO_ZONE 을 심어 자기 주소를 알려준다.
+// 파일을 두 벌로 나누지 않는 이유: 같은 화면이 두 파일로 갈라지면 한쪽만 고치는
+// 어긋남이 반드시 생긴다 (버킷 이름에서 실제로 겪었다).
+var HOST = window.PHOTO_ZONE || null;
+
+/// 꾸밀 사진의 주소.
+function photoSrc(photoId) {
+  return HOST ? HOST.photo : freshUrl(photoId + ".jpg");
+}
+
+/// 부스가 등록한 로고 스티커 목록 주소.
+function manifestSrc() {
+  return HOST ? HOST.stickers : freshUrl(STICKER_MANIFEST);
+}
+
+/// 목록에 적힌 항목 하나의 주소.
+function stickerSrc(item) {
+  return HOST ? (HOST.stickerBase + item) : assetUrl(item);
+}
+
+// ---------------------------------------------------------------------------
 // 필터 — 앱(lib/models/photo_filter.dart)과 **같은 4x5 색 행렬**을 쓴다.
 // 이름은 T.filters[id]에서 가져온다 (행렬은 언어와 무관하다).
 var FILTERS = [
@@ -393,7 +420,9 @@ function baseFraction(s) {
 var app = document.getElementById("app");
 var params = new URLSearchParams(location.search);
 // 영숫자만 남겨 다른 경로를 가리키지 못하게 한다.
-var id = (params.get("id") || "").replace(/[^a-zA-Z0-9]/g, "");
+// 로컬 서버가 띄울 때는 주소에 ?id= 가 없으므로 로컬 서버가 알려준 값을 쓴다.
+var id = (HOST ? (HOST.id || "") : (params.get("id") || ""))
+  .replace(/[^a-zA-Z0-9]/g, "");
 
 if (!id) {
   showMessage(T.badLink, T.badLinkWhy);
@@ -437,7 +466,7 @@ function loadPhoto() {
   image.onerror = function () {
     showMessage(T.notFound, T.notFoundWhy);
   };
-  image.src = freshUrl(id + ".jpg");
+  image.src = photoSrc(id);
 }
 
 /// 부스가 올린 로고 스티커를 받아온다. 없거나 실패하면 조용히 넘어간다 —
@@ -450,7 +479,7 @@ function loadEventStickers(done) {
 
   var loaded = [], left = 0;
 
-  fetch(freshUrl(STICKER_MANIFEST), { cache: "no-store" })
+  fetch(manifestSrc(), { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       var items = (data && data.items) || [];
@@ -462,7 +491,7 @@ function loadEventStickers(done) {
         im.crossOrigin = "anonymous";
         im.onload = function () { loaded.push({ img: im }); step(); };
         im.onerror = step;
-        im.src = assetUrl(objectPath);
+        im.src = stickerSrc(objectPath);
       });
     })
     .catch(function () { finalize(); });
