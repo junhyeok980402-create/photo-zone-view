@@ -224,6 +224,30 @@
 
   #toast[data-show="1"] { opacity: 1; }
 
+  /* 언어 전환 — 부스가 정한 언어로 열리지만, 못 읽는 손님이 직접 바꿀 수 있어야
+     한다. 사진과 저장 버튼이 주인공이라 눈에 띄되 작게 둔다. */
+  .langbar {
+    display: flex; justify-content: center; gap: 5px;
+    margin: -2px 0 8px;
+  }
+
+  .langbar button {
+    -webkit-appearance: none; appearance: none;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .05);
+    color: rgba(247, 242, 250, .6);
+    font: inherit; font-size: 11.5px; font-weight: 800;
+    letter-spacing: .04em;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .langbar button[aria-pressed="true"] {
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    border-color: transparent;
+    color: var(--ink);
+  }
+
   @media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
 </style>
 </head>
@@ -236,6 +260,8 @@
   GoodDevice photo zone
 </div>
 
+<div class="langbar" id="langbar"></div>
+
 <main id="app"></main>
 <div id="sheet"><div class="sheet-body" id="sheetBody"></div></div>
 <div id="toast"></div>
@@ -244,14 +270,34 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// 언어 — 손님 **폰의 브라우저 언어**를 따라간다.
+// 사진과 스티커를 **어디서** 받아오는가.
 //
-// 태블릿에서 고른 언어를 여기로 넘기지 않는다. 해외 행사에서는 한 부스에 여러
-// 국적이 섞이고, 그때 각자 자기 폰에서 자기 언어로 보는 것이 맞다. 주소에
-// 언어를 실어 보내면 QR을 남에게 넘겨줄 때 엉뚱한 언어로 열린다.
+// 기본은 아래의 공개 버킷이다(인터넷 경로). 그런데 부스에 인터넷이 없으면 사진이
+// 클라우드에 올라가지 못하고, 그러면 이 페이지도 열 수 없어 손님이 꾸미기를 아예
+// 못 쓴다. 그래서 **태블릿의 로컬 서버가 이 페이지를 직접 띄울 수 있게** 했다.
 //
-// 아는 언어가 아니면 영어로 간다 — 모르는 언어일 때 한국어보다 읽힐 가능성이
-// 높다.
+// 그때는 로컬 서버가 페이지 앞에 window.PHOTO_ZONE 을 심어 자기 주소를 알려준다.
+// 파일을 두 벌로 나누지 않는 이유: 같은 화면이 두 파일로 갈라지면 한쪽만 고치는
+// 어긋남이 반드시 생긴다 (버킷 이름에서 실제로 겪었다).
+//
+// 언어를 정하는 데도 이 값이 필요해서 스크립트 맨 앞에 둔다.
+var HOST = window.PHOTO_ZONE || null;
+var params = new URLSearchParams(location.search);
+
+// ---------------------------------------------------------------------------
+// 언어 — **부스에서 고른 언어로 열리고, 손님이 직접 바꿀 수 있다.**
+//
+// 우선순위:
+//   1. 이 폰에서 손님이 고른 언어 (위쪽 KO/EN/VI 버튼, 브라우저에 남는다)
+//   2. 부스가 실어 보낸 언어 (로컬 서버는 HOST.lang, 클라우드는 주소의 ?lang=)
+//   3. 폰 브라우저 언어
+//   4. 영어 — 모르는 언어일 때 한국어보다 읽힐 가능성이 높다
+//
+// 예전에는 2번 없이 폰 언어만 봤다. 그러면 태블릿에서 베트남어를 골라도 관리자
+// 자기 폰(한국어)으로 QR을 찍으면 한국어로 떠서, 설정이 먹었는지 확인할 방법이
+// 없었다. 그렇다고 부스 언어로 **고정**해 버리면 한 부스에 국적이 섞일 때 못 읽는
+// 손님이 생기므로 1번(전환 버튼)을 같이 둔다 — QR을 남에게 넘겨줘도 받은 사람이
+// 자기 언어로 바꿀 수 있다.
 var PACKS = {
   ko: {
     loading: "사진을 불러오는 중…",
@@ -336,15 +382,68 @@ var PACKS = {
   }
 };
 
-var LANG = (function () {
-  var tag = (navigator.language || "ko").toLowerCase();
+var LANG_KEY = "pz_lang";
+
+/// 우리가 아는 언어면 그 코드를, 아니면 null. "en-GB", "vi-VN" 같은 꼬리표도 받는다.
+function knownLang(tag) {
+  tag = (tag || "").toLowerCase();
   if (tag.indexOf("ko") === 0) return "ko";
   if (tag.indexOf("vi") === 0) return "vi";
-  return "en";
-})();
+  if (tag.indexOf("en") === 0) return "en";
+  return null;
+}
+
+/// 시크릿 모드나 쿠키 차단에서는 localStorage 접근 자체가 예외를 던진다.
+/// 언어 하나 때문에 화면이 통째로 죽으면 안 되므로 감싸 둔다.
+function storedLang() {
+  try { return localStorage.getItem(LANG_KEY); } catch (e) { return null; }
+}
+function rememberLang(code) {
+  try { localStorage.setItem(LANG_KEY, code); } catch (e) {}
+}
+
+var LANG = knownLang(storedLang())
+        || knownLang(HOST && HOST.lang)
+        || knownLang(params.get("lang"))
+        || knownLang(navigator.language)
+        || "en";
 
 var T = PACKS[LANG];
 document.documentElement.lang = LANG;
+
+/// 편집기가 떠 있는 동안 언어가 바뀌면 불린다. 편집기 안의 상태(붙여둔 스티커,
+/// 고른 필터)는 그 안쪽 함수만 알기 때문에, 다시 그리는 일은 그쪽에 맡긴다.
+var onLangChange = null;
+
+/// 위쪽 KO / EN / VI 단추.
+function renderLangBar() {
+  var bar = document.getElementById("langbar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  ["ko", "en", "vi"].forEach(function (code) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = code.toUpperCase();
+    b.setAttribute("aria-pressed", code === LANG ? "true" : "false");
+    b.setAttribute("lang", code);
+    b.addEventListener("click", function () { setLang(code); });
+    bar.appendChild(b);
+  });
+}
+
+/// 언어를 바꾼다. **페이지를 새로 고치지 않는다** — 이미 붙여둔 스티커와 고른
+/// 필터가 날아가면 손님이 처음부터 다시 해야 한다.
+function setLang(code) {
+  if (code === LANG || !PACKS[code]) return;
+  LANG = code;
+  T = PACKS[code];
+  rememberLang(code);
+  document.documentElement.lang = code;
+  STICKERS = buildStickers();
+  renderLangBar();
+  if (onLangChange) onLangChange();
+  else if (messageKeys) showMessage(messageKeys[0], messageKeys[1]);
+}
 
 // 사진이 있는 곳. 공개 버킷이라 키가 필요 없다 — 이 페이지에는 비밀이 없다.
 var STORAGE = "https://tbfzjglkhttlyhhjebwu.supabase.co/storage/v1/object/public";
@@ -353,18 +452,6 @@ var BUCKET = "photo";
 // 부스에서 올린 로고 스티커 목록. 태블릿 관리자 화면에서 스티커를 추가하면
 // 앱이 이 파일을 다시 쓴다. 없으면 내장 스티커만 보여준다.
 var STICKER_MANIFEST = "stickers/manifest.json";
-
-// ---------------------------------------------------------------------------
-// 사진과 스티커를 **어디서** 받아오는가.
-//
-// 기본은 위의 공개 버킷이다(인터넷 경로). 그런데 부스에 인터넷이 없으면 사진이
-// 클라우드에 올라가지 못하고, 그러면 이 페이지도 열 수 없어 손님이 꾸미기를 아예
-// 못 쓴다. 그래서 **태블릿의 로컬 서버가 이 페이지를 직접 띄울 수 있게** 했다.
-//
-// 그때는 로컬 서버가 페이지 앞에 window.PHOTO_ZONE 을 심어 자기 주소를 알려준다.
-// 파일을 두 벌로 나누지 않는 이유: 같은 화면이 두 파일로 갈라지면 한쪽만 고치는
-// 어긋남이 반드시 생긴다 (버킷 이름에서 실제로 겪었다).
-var HOST = window.PHOTO_ZONE || null;
 
 /// 꾸밀 사진의 주소.
 function photoSrc(photoId) {
@@ -401,12 +488,15 @@ var FILTERS = [
 // 이모지는 어느 나라에서나 그대로 통하므로 번역하지 않는다. **문구 스티커만**
 // 번역한다 — 사진에 그대로 박히는 글자라서, 베트남 손님 사진에 한글이 찍히면
 // 그 사진은 못 쓴다.
-var STICKERS = [
-  { label: T.groups.teeth,  items: ["🦷","🪥","🫧","😁","😄","😬","😷"] },
-  { label: T.groups.care,   items: ["🩺","🏥","🧑‍⚕️","🩹","💊","🧼"] },
-  { label: T.groups.praise, items: ["✨","💎","⭐","💯","👍","🥇","🎉","💙"] },
-  { label: T.groups.words,  items: T.words, text: true }
-];
+function buildStickers() {
+  return [
+    { label: T.groups.teeth,  items: ["🦷","🪥","🫧","😁","😄","😬","😷"] },
+    { label: T.groups.care,   items: ["🩺","🏥","🧑‍⚕️","🩹","💊","🧼"] },
+    { label: T.groups.praise, items: ["✨","💎","⭐","💯","👍","🥇","🎉","💙"] },
+    { label: T.groups.words,  items: T.words, text: true }
+  ];
+}
+var STICKERS = buildStickers();
 
 // 스티커 기본 크기 (사진 가로 대비). 문구는 글자가 길어 작게 잡고,
 // 로고는 알아볼 수 있어야 해서 이모지보다 조금 크게 잡는다.
@@ -418,23 +508,28 @@ function baseFraction(s) {
 
 // ---------------------------------------------------------------------------
 var app = document.getElementById("app");
-var params = new URLSearchParams(location.search);
+renderLangBar();
 // 영숫자만 남겨 다른 경로를 가리키지 못하게 한다.
 // 로컬 서버가 띄울 때는 주소에 ?id= 가 없으므로 로컬 서버가 알려준 값을 쓴다.
 var id = (HOST ? (HOST.id || "") : (params.get("id") || ""))
   .replace(/[^a-zA-Z0-9]/g, "");
 
 if (!id) {
-  showMessage(T.badLink, T.badLinkWhy);
+  showMessage("badLink", "badLinkWhy");
 } else {
   loadPhoto();
 }
 
-function showMessage(lede, fine) {
+/// 지금 떠 있는 안내가 어떤 것인지. 문구를 그대로 들고 있으면 언어를 바꿔도
+/// 옛 언어가 남는다.
+var messageKeys = null;
+
+function showMessage(ledeKey, fineKey) {
+  messageKeys = [ledeKey, fineKey];
   app.innerHTML =
     '<div class="center">' +
-      '<p class="lede">' + lede + '</p>' +
-      '<p class="fine">' + fine + '</p>' +
+      '<p class="lede">' + T[ledeKey] + '</p>' +
+      '<p class="fine">' + T[fineKey] + '</p>' +
     '</div>' + noticeHtml();
 }
 
@@ -455,6 +550,7 @@ function assetUrl(suffix) {
 }
 
 function loadPhoto() {
+  messageKeys = null;
   app.innerHTML = '<div class="center"><p class="lede">' + T.loading + '</p></div>';
 
   var image = new Image();
@@ -464,7 +560,7 @@ function loadPhoto() {
 
   image.onload = function () { startEditor(image); };
   image.onerror = function () {
-    showMessage(T.notFound, T.notFoundWhy);
+    showMessage("notFound", "notFoundWhy");
   };
   image.src = photoSrc(id);
 }
@@ -526,6 +622,9 @@ function startEditor(image) {
   var selected = -1;
   var nextId = 1;
   var groups = STICKERS;
+  var eventLogos = null;   // 부스가 올린 로고. 언어가 바뀌어도 그대로 쓴다.
+  var hintKey = "hintStart";
+  var savingNow = false;
 
   app.innerHTML =
     '<div id="stage"><canvas id="view"></canvas></div>' +
@@ -535,7 +634,7 @@ function startEditor(image) {
       '<div class="row">' +
         '<button class="btn ghost" id="stickerBtn" type="button">' +
           '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>' +
-          T.stickerBtn + '</button>' +
+          '<span id="stickerLabel">' + T.stickerBtn + '</span></button>' +
         '<button class="btn" id="saveBtn" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
           '<span id="saveLabel">' + T.save + '</span></button>' +
@@ -555,10 +654,35 @@ function startEditor(image) {
   window.addEventListener("resize", layout);
   window.addEventListener("orientationchange", layout);
 
+  // 언어를 바꿔도 붙여둔 스티커와 고른 필터는 그대로 두고 글자만 갈아끼운다.
+  // 사진에 이미 박은 문구 스티커는 손대지 않는다 — 손님이 그 문구를 고른 것이다.
+  onLangChange = function () {
+    rebuildGroups();
+    buildChips();
+    renderSheetItems();
+    setHint(hintKey);
+    document.getElementById("stickerLabel").textContent = T.stickerBtn;
+    if (!savingNow) document.getElementById("saveLabel").textContent = T.save;
+    var notice = document.querySelector(".tools .notice");
+    if (notice) notice.innerHTML = T.privacy;
+  };
+
+  function rebuildGroups() {
+    groups = eventLogos
+      ? [{ label: T.eventGroup, items: eventLogos, event: true }].concat(STICKERS)
+      : STICKERS;
+  }
+
+  function setHint(key) {
+    hintKey = key;
+    hint.textContent = T[key];
+  }
+
   // 로고는 늦게 와도 되므로 편집기를 먼저 띄우고, 도착하면 목록만 다시 그린다.
   loadEventStickers(function (logos) {
     if (!logos) return;
-    groups = [{ label: T.eventGroup, items: logos, event: true }].concat(STICKERS);
+    eventLogos = logos;
+    rebuildGroups();
     renderSheetItems();
   });
 
@@ -742,6 +866,7 @@ function startEditor(image) {
 
   function buildChips() {
     var wrap = document.getElementById("chips");
+    wrap.innerHTML = "";   // 언어를 바꾸면 다시 부른다 — 비우지 않으면 칩이 쌓인다.
     FILTERS.forEach(function (f) {
       var b = document.createElement("button");
       b.type = "button";
@@ -804,7 +929,7 @@ function startEditor(image) {
     base.x = 0.5; base.y = 0.5; base.scale = 1; base.rotation = 0;
     placed.push(base);
     selected = base.id;
-    hint.textContent = T.hintPlacing;
+    setHint("hintPlacing");
     render();
   }
 
@@ -838,13 +963,13 @@ function startEditor(image) {
       if (dist(local, h.remove) <= hit) {
         placed = placed.filter(function (s) { return s.id !== selected; });
         selected = -1;
-        hint.textContent = T.hintRemoved;
+        setHint("hintRemoved");
         render();
         return;
       }
       if (dist(local, h.done) <= hit) {
         selected = -1;
-        hint.textContent = T.hintDone;
+        setHint("hintDone");
         render();
         return;
       }
@@ -927,6 +1052,7 @@ function startEditor(image) {
     // 원본 크기로 JPEG를 만드는 데 폰에서는 몇 초가 걸린다. 아무 표시가 없으면
     // 손님이 고장난 줄 알고 계속 누른다.
     btn.disabled = true;
+    savingNow = true;
     label.textContent = T.saving;
 
     // 글자가 먼저 바뀌어 보이도록 잠깐 쉬었다가 무거운 일을 시작한다.
@@ -941,6 +1067,7 @@ function startEditor(image) {
 
       out.toBlob(function (blob) {
         btn.disabled = false;
+        savingNow = false;
         label.textContent = T.save;
         if (!blob) { toast(T.saveFailed); return; }
         saveBlob(blob);
